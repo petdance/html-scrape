@@ -1,0 +1,8 @@
+Changes
+lib/HTML/Scrape.pm
+Makefile.PL
+MANIFEST
+README.md
+t/00-load.t
+t/basics.t
+t/pod.t
