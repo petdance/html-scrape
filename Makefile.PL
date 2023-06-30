@@ -11,7 +11,7 @@ my %WriteMakefileArgs = (
     LICENSE          => 'artistic_2',
     MIN_PERL_VERSION => '5.10.1',
     CONFIGURE_REQUIRES => {
-        'ExtUtils::MakeMaker' => '0',
+        'ExtUtils::MakeMaker' => '6.64',
     },
     TEST_REQUIRES => {
         'Test::More'     => '0',
