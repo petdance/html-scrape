@@ -17,6 +17,7 @@ Version 0.1.0
 our $VERSION = '0.1.0';
 
 use HTML::Parser;
+use HTML::TokeParser;
 use HTML::Tagset;
 
 
@@ -30,30 +31,56 @@ Handy helpers for common HTML scraping tasks.
 
 =head1 FUNCTIONS
 
-=head2 scrape_all_ids( $html )
+=head2 scrape_id( $id, $html )
+
+Scrapes the text of the single ID C<$id> from C<$html>.
+
+=cut
+
+sub scrape_id {
+    my $id = shift;
+    my $html = shift;
+
+    my $all_ids = scrape_all_ids( $html, $id );
+
+    return $all_ids->{$id};
+}
+
+
+=head2 scrape_all_ids( $html [, $specific_id ] )
 
 Parses the entire web page and returns all the text in a hashref keyed on ID.
+
+If you pass in C<$specific_id>, then only that ID will be scraped,
+and parsing will stop once it is found. The better way to do this is by
+calling C<scrape_id>.
 
 =cut
 
 sub scrape_all_ids {
-    my $html = shift;
+    my $html      = shift;
+    my $wanted_id = shift;
 
     my $p = HTML::Parser->new(
-        start_h         => [ \&_parser_handle_start, 'self, tagname, attr, line, column' ],
-        end_h           => [ \&_parser_handle_end,   'self, tagname, line, column' ],
-        text_h          => [ \&_parser_handle_text,  'self, dtext' ],
-        ignore_elements => [qw(script style)],
+        start_h => [ \&_parser_handle_start, 'self, tagname, attr, line, column' ],
+        end_h   => [ \&_parser_handle_end,   'self, tagname, line, column' ],
+        text_h  => [ \&_parser_handle_text,  'self, dtext' ],
     );
     $p->{stack} = [];
     $p->{ids} = {};
+    if ( defined $wanted_id ) {
+        $p->{wanted_id} = $wanted_id;
+    }
 
     $p->empty_element_tags(1);
     $p->parse($html);
     $p->eof;
 
-    if ( my $n = scalar @{$p->{stack}} ) {
-        warn "$n tag(s) unclosed at end of document.\n";
+    if ( !defined $wanted_id ) {
+        # With a wanted_id, we would have stopped parsing early and left tags on the stack, so don't check.
+        if ( my $n = scalar @{$p->{stack}} ) {
+            warn "$n tag(s) unclosed at end of document.\n";
+        }
     }
 
     return $p->{ids};
@@ -163,10 +190,28 @@ sub _close_tag {
 
     my (undef, $id, $text) = @{$item};
     if ( defined $id ) {
-        $text =~ s/^\s+//;
-        $text =~ s/\s+$//;
-        $text =~ s/\s+/ /g;
-        $parser->{ids}{$id} = $text;
+        my $keepit;
+
+        if ( defined $parser->{wanted_id} ) {
+            # We're searching for a specific ID.
+            if ( $id eq $parser->{wanted_id} ) {
+                $keepit = 1;
+                $parser->eof;
+            }
+            else {
+                # No need to keep the text of an ID we don't care about.
+            }
+        }
+        else {
+            $keepit = 1;
+        }
+
+        if ( $keepit ) {
+            $text =~ s/^\s+//;
+            $text =~ s/\s+$//;
+            $text =~ s/\s+/ /g;
+            $parser->{ids}{$id} = $text;
+        }
     }
 
     return;

@@ -5,5 +5,7 @@ Makefile.PL
 MANIFEST
 README.md
 t/00-load.t
-t/scrape_all_ids.t
+t/perldoc.html
+t/perldoc.t
+t/scrape.t
 t/pod.t

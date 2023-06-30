@@ -14,7 +14,7 @@ my %WriteMakefileArgs = (
         'ExtUtils::MakeMaker' => '6.64',
     },
     TEST_REQUIRES => {
-        'Test::More'     => '0',
+        'Test::More'     => '0.98', # To get subtest()
         'Test::Warnings' => '0',
     },
     PREREQ_PM => {
