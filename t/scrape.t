@@ -4,10 +4,11 @@ use 5.010;
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 8;
 use Test::Warnings;
 
 use HTML::Scrape;
+
 
 SIMPLE: {
     my $html = <<'HTML';
@@ -99,7 +100,28 @@ HTML
     };
 
     _check_single_ids( $html, $expected, 'Partial document' );
-    # Don't check on _check_all_ids because it will complain.
+    # Don't check on _check_all_ids because it will complain about unclosed tags.
+}
+
+
+BLOCK_ELEMENT_SPACING: {
+    my $html = <<'HTML';
+<p id="AAA">
+    one<br>two<br />three<hr>
+</p>
+<p id="BBB">
+    two<span>-by-</span>four
+</p>
+
+HTML
+
+    my $expected = {
+        AAA => 'one two three',
+        BBB => 'two-by-four',
+    };
+
+    _check_single_ids( $html, $expected, 'Block element spacing' );
+    _check_all_ids( $html, $expected, 'Block element spacing' );
 }
 
 

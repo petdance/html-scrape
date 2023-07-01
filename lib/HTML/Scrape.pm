@@ -94,7 +94,12 @@ sub _parser_handle_start {
     my $line    = shift;
     my $column  = shift;
 
-    return if $HTML::Tagset::emptyElement{$tagname};
+    if ( $HTML::Tagset::emptyElement{$tagname} ) {
+        if ( $tagname eq 'br' || $tagname eq 'hr' ) {
+            _parser_handle_text( $parser, ' ' );
+        }
+        return;
+    }
 
     my $id = $attr->{id};
 
@@ -138,7 +143,6 @@ sub _parser_handle_end {
         my $previous_item = $stack->[-1];
         my $previous_tagname = $previous_item->[0];
 
-        #warn "tagname $tagname hprase markup = " , $HTML::Tagset::isPhraseMarkup{$tagname} // 'undef', ' previous = ' . $previous_tagname;
         my $this_tag_closes_previous_one =
             ( $tagname ne $previous_tagname ) 
             &&

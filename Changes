@@ -1,5 +1,12 @@
 Revision history for HTML::Scrape
 
+
+NEXT
+========================================
+[FIXES]
+Aad spaces to text scraping that includes <br> or <hr>.
+
+
 v0.2.0      Fri Jun 30 14:58:08 CDT 2023
 ========================================
 [ENHANCEMENTS]
