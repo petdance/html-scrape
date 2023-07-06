@@ -1,7 +1,7 @@
 Revision history for HTML::Scrape
 
 
-NEXT
+0.3.0       Thu Jul  6 09:18:03 CDT 2023
 ========================================
 [ENHANCEMENTS]
 The new $HTML::Scrape::WARNINGS variable lets you suppress warnings in
@@ -13,12 +13,12 @@ Aad spaces to text scraping that includes <br> or <hr>.
 Handle empty tags with IDs.
 
 
-v0.2.0      Fri Jun 30 14:58:08 CDT 2023
+0.2.0       Fri Jun 30 14:58:08 CDT 2023
 ========================================
 [ENHANCEMENTS]
 Added scrape_id() function for scraping a single ID.
 
 
-v0.1.0      Thu Jun 29 14:59:04 CDT 2023
+0.1.0       Thu Jun 29 14:59:04 CDT 2023
 ========================================
 Very first version. Functions may change in name and arguments.

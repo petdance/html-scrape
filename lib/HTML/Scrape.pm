@@ -10,11 +10,11 @@ HTML::Scrape - Helper functions for scraping text from HTML tags
 
 =head1 VERSION
 
-Version 0.2.0
+Version 0.3.0
 
 =cut
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 our $WARNINGS = 1;
 
