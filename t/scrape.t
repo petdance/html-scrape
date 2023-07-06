@@ -4,7 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More tests => 10;
 use Test::Warnings;
 
 use HTML::Scrape;
@@ -106,22 +106,58 @@ HTML
 
 BLOCK_ELEMENT_SPACING: {
     my $html = <<'HTML';
-<p id="AAA">
+<div id="AAA">
     one<br>two<br />three<hr>
-</p>
-<p id="BBB">
+</div>
+<div id="BBB">
     two<span>-by-</span>four
-</p>
+</div>
+<div id="CCC">
+    foo<p>bar</p>bat
+</div>
+<div id="DDD">
+    bingo<hr>bongo<table>bingo</table>bongo
+</div>
 
 HTML
 
     my $expected = {
         AAA => 'one two three',
         BBB => 'two-by-four',
+        CCC => 'foo bar bat',
+        DDD => 'bingo bongo bingo bongo',
     };
 
     _check_single_ids( $html, $expected, 'Block element spacing' );
     _check_all_ids( $html, $expected, 'Block element spacing' );
+}
+
+
+EMPTY_TAGS: {
+    # Even if a tag has no content it should still exist with a blank value.
+
+    my $html = <<'HTML';
+<div id="AAA">
+    Stuff
+    <hr id="HR">
+    More stuff
+    <input id="next_page" class="small button" type="submit" name="next.x" value="Next Page">
+    Still more stuff
+    <p>
+        Cavalcade of stuff
+    </p>
+</div>
+HTML
+
+    my $expected = {
+        HR        => '',
+        next_page => '',
+        prev_page => undef,
+        AAA       => 'Stuff More stuff Still more stuff Cavalcade of stuff',
+    };
+
+    _check_single_ids( $html, $expected, 'Empty tags' );
+    _check_all_ids( $html, $expected, 'Empty tags' );
 }
 
 
@@ -140,6 +176,7 @@ sub _check_single_ids {
 
         # For each value, scrape it two different ways.
         while ( my ($id,$exp) = each %{$expected} ) {
+            # Check it via scrape_id.
             is( HTML::Scrape::scrape_id( $id, $html ), $exp, $id );
 
             if ( defined $exp ) {

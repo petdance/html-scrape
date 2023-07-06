@@ -6,7 +6,7 @@ use warnings;
 
 =head1 NAME
 
-HTML::Scrape - The great new HTML::Scrape!
+HTML::Scrape - Helper functions for scraping text from HTML tags
 
 =head1 VERSION
 
@@ -15,6 +15,8 @@ Version 0.2.0
 =cut
 
 our $VERSION = '0.2.0';
+
+our $WARNINGS = 1;
 
 use HTML::Parser;
 use HTML::TokeParser;
@@ -28,6 +30,17 @@ Handy helpers for common HTML scraping tasks.
     use HTML::Scrape;
 
     my $ids = HTML::Scrape::scrape_all_ids( $html );
+
+=head1 WARNINGS
+
+You can enable parsing warnings by setting C<$HTML::Scrape::WARNINGS>
+to a true value. By default, no warnings are emitted.
+
+=head1 NOTES FOR FUTURE DOCS
+
+If a tag exists but has no content, including empty tags like C<< <hr> >>,
+then it will have an empty string for content. This way you can test
+for existence of these tags.
 
 =head1 FUNCTIONS
 
@@ -73,13 +86,13 @@ sub scrape_all_ids {
     }
 
     $p->empty_element_tags(1);
-    $p->parse($html);
+    $p->parse($html) if defined($html);
     $p->eof;
 
     if ( !defined $wanted_id ) {
         # With a wanted_id, we would have stopped parsing early and left tags on the stack, so don't check.
         if ( my $n = scalar @{$p->{stack}} ) {
-            warn "$n tag(s) unclosed at end of document.\n";
+            _warn( "$n tag(s) unclosed at end of document: " . join( ', ', map { $_->[0] } @{$p->{stack}} ) );
         }
     }
 
@@ -94,18 +107,37 @@ sub _parser_handle_start {
     my $line    = shift;
     my $column  = shift;
 
+    my $id = $attr->{id};
+
     if ( $HTML::Tagset::emptyElement{$tagname} ) {
         if ( $tagname eq 'br' || $tagname eq 'hr' ) {
             _parser_handle_text( $parser, ' ' );
         }
+
+        if ( $id ) {
+            if ( defined($parser->{wanted_id}) ) {
+                if ( $id eq $parser->{wanted_id} ) {
+                    $parser->{ids}{$id} = '';
+                    $parser->eof;
+                    return;
+                }
+            }
+            else {
+                $parser->{ids}{$id} = '';
+            }
+        }
+
         return;
     }
 
-    my $id = $attr->{id};
+    # Add space if this tag is one that causes whitespace when rendered.
+    if ( $tagname eq 'br' || !$HTML::Tagset::isPhraseMarkup{$tagname} ) {
+        _parser_handle_text( $parser, ' ' );
+    }
 
     # If it's a dupe ID, warn and ignore the ID.
     if ( defined($id) && exists $parser->{ids}{$id} ) {
-        warn "Duplicate ID $id found in <$tagname> at $line:$column\n";
+        _warn( "Duplicate ID $id found in <$tagname> at $line:$column" );
         $id = undef;
     }
 
@@ -138,7 +170,7 @@ sub _parser_handle_end {
 
     my $stack = $parser->{stack};
 
-    # Deal with tags that close others.
+    # Deal with tags that close others. Implicitly close the previous tag if it's li, dt, dd or p.
     if ( @{$stack} ) {
         my $previous_item = $stack->[-1];
         my $previous_tagname = $previous_item->[0];
@@ -160,15 +192,20 @@ sub _parser_handle_end {
     }
 
     if ( !@{$stack} ) {
-        warn "Unexpected closing </$tagname> at $line:$column\n";
+        _warn( "Unexpected closing </$tagname> at $line:$column" );
         return;
     }
     if ( $tagname ne $stack->[-1][0] ) {
-        warn "Unexpected closing </$tagname> at $line:$column: Expecting </$stack->[-1][0]>\n";
+        _warn( "Unexpected closing </$tagname> at $line:$column: Expecting </$stack->[-1][0]>" );
         return;
     }
 
     _close_tag( $parser, pop @{$stack} );
+
+    # Add space if this tag is one that causes whitespace when rendered.
+    if ( $tagname eq 'br' || !$HTML::Tagset::isPhraseMarkup{$tagname} ) {
+        _parser_handle_text( $parser, ' ' );
+    }
 
     return;
 }
@@ -217,6 +254,13 @@ sub _close_tag {
             $parser->{ids}{$id} = $text;
         }
     }
+
+    return;
+}
+
+
+sub _warn {
+    warn @_, "\n" if $WARNINGS;
 
     return;
 }

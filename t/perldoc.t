@@ -28,7 +28,7 @@ PERLDOC: {
             'Unexpected closing </nav> at 372:0: Expecting </ul>',
             'Unexpected closing </body> at 463:2: Expecting </ul>',
             'Unexpected closing </html> at 464:0: Expecting </ul>',
-            '6 tag(s) unclosed at end of document.',
+            '6 tag(s) unclosed at end of document: html, body, nav, div, ul, ul',
         ]
     );
 
