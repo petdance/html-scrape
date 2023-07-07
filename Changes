@@ -1,6 +1,12 @@
 Revision history for HTML::Scrape
 
 
+NEXT
+========================================
+[ENHANCEMENTS]
+Include the ID of the unclosed tags in the stack error message, if possible.
+
+
 0.3.0       Thu Jul  6 09:18:03 CDT 2023
 ========================================
 [ENHANCEMENTS]

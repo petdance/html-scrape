@@ -92,7 +92,8 @@ sub scrape_all_ids {
     if ( !defined $wanted_id ) {
         # With a wanted_id, we would have stopped parsing early and left tags on the stack, so don't check.
         if ( my $n = scalar @{$p->{stack}} ) {
-            _warn( "$n tag(s) unclosed at end of document: " . join( ', ', map { $_->[0] } @{$p->{stack}} ) );
+            my $tags = $n == 1 ? 'tag' : 'tags';
+            _warn( "$n $tags unclosed at end of document: " . _tag_stack( $p->{stack} ) );
         }
     }
 
@@ -263,6 +264,23 @@ sub _warn {
     warn @_, "\n" if $WARNINGS;
 
     return;
+}
+
+
+sub _tag_stack {
+    my $stack = shift;
+
+    my @tagtext;
+
+    for my $i ( @{$stack} ) {
+        my $text = $i->[0];
+        if ( my $id = $i->[1] ) {
+            $text = "$text id=\"$id\"";
+        }
+        push @tagtext, $text;
+    }
+
+    return join( ', ', @tagtext );
 }
 
 
